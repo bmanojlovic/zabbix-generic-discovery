@@ -1,0 +1,4 @@
+Create Regular expression required by template:
+Name: Websphere MQ Discovery
+Rule1: ^AMQ\.MQEXPLORER.*   with [Result is FALSE] selected
+Rule2: ^SYSTEM\..*          with [Result is FALSE] selected

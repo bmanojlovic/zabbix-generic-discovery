@@ -1,0 +1,114 @@
+#!/bin/bash
+# Copyright 2014 Boris Manojlovic boris@steki.net
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+FUNC_NAME=$1
+
+# remove function name parameter
+shift
+function _head {
+	echo '{'
+	echo '"data":['
+}
+
+function _foot {
+	echo ']}'
+}
+
+function unsupported {
+	echo 'ZBX_NOTSUPPORTED'
+}
+function wmq.qmgr.discovery {
+	_head
+	/opt/mqm/bin/dspmq|sed -re 's/.*\((.*)\).*\((.*)\)/\t{\n\t\t"{#QMGR}":"\1",\n\t\t"{#QMGRSTAT}":"\2"},/g;$s/,$//'
+	_foot
+}
+
+function wmq.qmgr {
+	sudo -u mqm /opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
+}
+
+function wmq.qmgr.queue.discovery {
+	_head
+	echo 'DIS Q(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1 |sed -re '/\s+QUEUE/!d;s/\s+QUEUE[(]([^)]*)\).*/\t{"{#QNAME}":"\1"},/g;$s/,$//'|sed  -e '$s/,$//'
+	_foot
+}
+
+function wmq.qmgr.queue {
+	echo "DIS Q($2) $3" | sudo -u mqm /opt/mqm/bin/runmqsc -e $1 | sed -re '/\s+(QUEUE|'$3')/I!d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]*)[)].*/\1/ig'
+}
+function wmq.qmgr.channel.discovery {
+	_head
+	echo 'DIS CHL(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+CHANNEL/!d;s/\s+CHANNEL[(]([^)]*)[)].*/\t{"{#CHLNAME}":"\1"},/g;'|sed -e '$s/,$//'
+	_foot
+}
+
+function wmq.qmgr.channel {
+	echo 'DIS CHL('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(CHANNEL|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+}
+
+function wmq.qmgr.listener.discovery {
+	_head
+	echo 'DIS LSTR(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+LISTENER/!d;s/\s+LISTENER[(]([^)]*)[)].*/\t{"{#LISTENER}":"\1"},/g;'|sed -e '$s/,$//'
+	_foot
+}
+
+function wmq.qmgr.listener {
+	echo 'DIS LSTR('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+}
+
+function wmq.qmgr.lsstatus {
+	echo 'DIS LSSTATUS('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+}
+
+function wmq {
+	/opt/mqm/bin/dspmqver|sed -re '/^'$1':/I!d;s/'$1':\s+(.*)/\1/Ig'
+}
+
+case $FUNC_NAME in
+	wmq.qmgr.discovery)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.queue.discovery)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.queue)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.channel.discovery)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.channel)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.listener.discovery)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.listener)
+		$FUNC_NAME $@
+		;;
+	wmq.qmgr.lsstatus)
+		$FUNC_NAME $@
+		;;
+	wmq)
+		$FUNC_NAME $@
+		;;
+	*)
+		unsupported
+		;;
+esac
