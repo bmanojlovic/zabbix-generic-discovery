@@ -34,7 +34,7 @@ if len(sys.argv) < 4:
     )
     sys.exit()
 
-print ("ZGD:%s:START") % str(datetime.now())
+print ("ZGD:%s:START" % str(datetime.now()) )
 
 # cat zabbix-generic-discovery.conf
 # [default]
@@ -63,6 +63,17 @@ REPLACEMENT = sys.argv[3]
 hostid = zapi.host.get(filter={"host": HOSTNAME})[0]['hostid']
 if not hostid:
     raise NoHostFound
+
+def graph_item_get(hostid, itemid, PLACEHOLDER,REPLACEMENT):
+    """
+    Return itemid of item with corrected key_ 
+    """
+    origitemproto = (zapi.itemprototype.get(hostids=hostid, itemids=itemid, output="extend",selectApplications={}))[0]
+    origitemproto['key_'] = origitemproto['key_'].replace( PLACEHOLDER, REPLACEMENT)
+    fixed_itemid = zapi.itemprototype.get(hostids=hostid, search = {'key_':origitemproto['key_'] })
+    if len(fixed_itemid) > 0:
+        print ("found itemprototype with key = %s" % origitemproto["key_"])
+    return fixed_itemid[0]
 
 for drule in zapi.discoveryrule.get(hostids=hostid, selectItems={}, selectGraphs={},  selectTriggers={},
                                     selectHostPrototypes={}, search={"key_": PLACEHOLDER}):
@@ -111,16 +122,12 @@ for drule in zapi.discoveryrule.get(hostids=hostid, selectItems={}, selectGraphs
 
     """ Create graphs on created prototype items """
     for graphprotoid in drule['graphs']:
-        graphprotoitems = (zapi.graphitem.get(graphids=graphprotoid, selectItems={}, selectGraphItems={}, expandData="true", output="extend"))
+        graphprotoitems = (zapi.graphitem.get(graphids=graphprotoid, selectItems={}, selectGraphItems={}, output="extend"))
         gitems = []
         for gitem in graphprotoitems:
-            gitem['key_'] = gitem['key_'].replace( PLACEHOLDER, REPLACEMENT)
+            gitem['itemid'] = graph_item_get(hostid, gitem['itemid'], PLACEHOLDER, REPLACEMENT)['itemid']
             del gitem['graphid']
             del gitem['gitemid']
-            del gitem['graphs']
-            gitem['hostid']= hostid
-            del gitem['host']
-            gitem['itemid'] = zapi.itemprototype.get(hostids=hostid, search={"key_":gitem["key_"]})[0]['itemid']
             gitems.append(gitem)
 
         graphproto = zapi.graphprototype.get(hostids=hostid, graphids=graphprotoid, output="extend")[0]
@@ -135,4 +142,4 @@ for drule in zapi.discoveryrule.get(hostids=hostid, selectItems={}, selectGraphs
     """ Create hosts on created prototype items """
     """ TODO """
 
-print ("ZGD:%s:STOP") % str(datetime.now())
+print ("ZGD:%s:STOP" % str(datetime.now()) )
