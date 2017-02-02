@@ -37,7 +37,7 @@ function wmq.qmgr.discovery {
 }
 
 function wmq.qmgr {
-	sudo -u mqm /opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
+	/opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
 }
 
 function wmq.qmgr.queue.discovery {
