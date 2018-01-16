@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Set here what program to use if zabbix user does not have 
+# enough privileges
+#RUN_AS_USER="su - mqm -c"
+#RUN_AS_USER="runas -u mqm"
+#RUN_AS_USER=""
+RUN_AS_USER="sudo -u mqm"
 
 FUNC_NAME=$1
 
@@ -37,40 +43,44 @@ function wmq.qmgr.discovery {
 }
 
 function wmq.qmgr {
+<<<<<<< Updated upstream
 	/opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
+=======
+	${RUN_AS_USER} /opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
+>>>>>>> Stashed changes
 }
 
 function wmq.qmgr.queue.discovery {
 	_head
-	echo 'DIS Q(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1 |sed -re '/\s+QUEUE/!d;s/\s+QUEUE[(]([^)]*)\).*/\t{"{#QNAME}":"\1"},/g;$s/,$//'|sed  -e '$s/,$//'
+	echo 'DIS Q(*)'|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1 |sed -re '/\s+QUEUE/!d;s/\s+QUEUE[(]([^)]*)\).*/\t{"{#QNAME}":"\1"},/g;$s/,$//'|sed  -e '$s/,$//'
 	_foot
 }
 
 function wmq.qmgr.queue {
-	echo "DIS Q($2) $3" | sudo -u mqm /opt/mqm/bin/runmqsc -e $1 | sed -re '/\s+(QUEUE|'$3')/I!d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]*)[)].*/\1/ig'
+	echo "DIS Q($2) $3" |${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1 | sed -re '/\s+(QUEUE|'$3')/I!d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]*)[)].*/\1/ig'
 }
 function wmq.qmgr.channel.discovery {
 	_head
-	echo 'DIS CHL(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+CHANNEL/!d;s/\s+CHANNEL[(]([^)]*)[)].*/\t{"{#CHLNAME}":"\1"},/g;'|sed -e '$s/,$//'
+	echo 'DIS CHL(*)'|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+CHANNEL/!d;s/\s+CHANNEL[(]([^)]*)[)].*/\t{"{#CHLNAME}":"\1"},/g;'|sed -e '$s/,$//'
 	_foot
 }
 
 function wmq.qmgr.channel {
-	echo 'DIS CHL('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(CHANNEL|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+	echo 'DIS CHL('$2') '$3|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(CHANNEL|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
 }
 
 function wmq.qmgr.listener.discovery {
 	_head
-	echo 'DIS LSTR(*)'|sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+LISTENER/!d;s/\s+LISTENER[(]([^)]*)[)].*/\t{"{#LISTENER}":"\1"},/g;'|sed -e '$s/,$//'
+	echo 'DIS LSTR(*)'|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+LISTENER/!d;s/\s+LISTENER[(]([^)]*)[)].*/\t{"{#LISTENER}":"\1"},/g;'|sed -e '$s/,$//'
 	_foot
 }
 
 function wmq.qmgr.listener {
-	echo 'DIS LSTR('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+	echo 'DIS LSTR('$2') '$3|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
 }
 
 function wmq.qmgr.lsstatus {
-	echo 'DIS LSSTATUS('$2') '$3| sudo -u mqm /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
+	echo 'DIS LSSTATUS('$2') '$3|${RUN_AS_USER} /opt/mqm/bin/runmqsc -e $1|sed -re '/\s+(LISTENER|'$3')/I!d;/AMQ/d;/'$3'/I!d;s/.*\s+'$3'[(]([^)]+)[)]/\1/g'
 }
 
 function wmq {
