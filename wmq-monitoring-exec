@@ -43,11 +43,7 @@ function wmq.qmgr.discovery {
 }
 
 function wmq.qmgr {
-<<<<<<< Updated upstream
 	/opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
-=======
-	${RUN_AS_USER} /opt/mqm/bin/dspmq -m $1 -o all|sed -re 's/.*'$2'[(]([^)]*+)[)].*/\1/ig'
->>>>>>> Stashed changes
 }
 
 function wmq.qmgr.queue.discovery {
